@@ -111,7 +111,7 @@ def login():
     data = request.get_json()
     user = User.query.filter_by(username=data["username"]).first()
     if user and bcrypt.check_password_hash(user.password, data["password"]):
-        token = create_access_token(identity=user.id)
+        token = create_access_token(identity=str(user.id))  # identity harus string
         return jsonify({"token": token})
     return jsonify({"message": "Invalid credentials"}), 401
 
@@ -144,7 +144,7 @@ def create_note():
       201:
         description: Note created
     """
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())  # konversi kembali ke int
     data = request.get_json()
     new_note = Note(title=data["title"], content=data["content"], user_id=user_id)
     db.session.add(new_note)
@@ -165,7 +165,7 @@ def get_notes():
       200:
         description: List of notes
     """
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     notes = Note.query.filter_by(user_id=user_id).all()
     result = [{"id": n.id, "title": n.title, "content": n.content} for n in notes]
     return jsonify(result)
@@ -202,7 +202,7 @@ def update_note(note_id):
       200:
         description: Note updated
     """
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     note = Note.query.filter_by(id=note_id, user_id=user_id).first()
     if not note:
         return jsonify({"message": "Note not found"}), 404
@@ -232,7 +232,7 @@ def delete_note(note_id):
       200:
         description: Note deleted
     """
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     note = Note.query.filter_by(id=note_id, user_id=user_id).first()
     if not note:
         return jsonify({"message": "Note not found"}), 404
